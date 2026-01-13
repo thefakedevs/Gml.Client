@@ -43,6 +43,10 @@ public class BaseFileUpdateHandler : IFileUpdateHandler
 
         foreach (var filePath in files.Concat(assetsFiles).Concat(runtimeFiles))
         {
+            // Пропускаем файлы с расширением .jar.disabled
+            if (filePath.EndsWith(".jar.disabled", StringComparison.OrdinalIgnoreCase))
+                continue;
+
             var relativePath = Path.GetRelativePath(rootDirectory, filePath);
             var fileInfo = new FileInfo(filePath);
             // Используем Path.DirectorySeparatorChar для нормализации пути

@@ -42,6 +42,10 @@ public class SystemIoProcedures
             var localPath = Path.Combine(installationDirectory,
                 downloadingFile.Directory.TrimStart('\\').TrimStart(Path.DirectorySeparatorChar));
 
+            // Пропускаем файлы с расширением .jar.disabled
+            if (localPath.EndsWith(".jar.disabled", StringComparison.OrdinalIgnoreCase))
+                return;
+
             if (FileExists(localPath))
             {
                 if (new FileInfo(localPath).Length >= OneHundredMb) return;
