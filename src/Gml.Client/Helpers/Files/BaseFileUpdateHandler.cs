@@ -1,5 +1,7 @@
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,7 +47,12 @@ public class BaseFileUpdateHandler : IFileUpdateHandler
         {
             // Пропускаем файлы с расширением .jar.disabled
             if (filePath.EndsWith(".jar.disabled", StringComparison.OrdinalIgnoreCase))
+            {
+#if DEBUG
+                Debug.WriteLine($"Skipping disabled mod file: {filePath}");
+#endif
                 continue;
+            }
 
             var relativePath = Path.GetRelativePath(rootDirectory, filePath);
             var fileInfo = new FileInfo(filePath);

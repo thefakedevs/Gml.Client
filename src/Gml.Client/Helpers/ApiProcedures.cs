@@ -497,6 +497,9 @@ public class ApiProcedures
             try
             {
                 await DownloadFile(installationDirectory, file, throttler, cancellationToken);
+#if DEBUG
+                Debug.WriteLine($"File downloaded successfully on attempt {attempt}: {file}");
+#endif
                 return;
             }
             catch (IOException ex)
@@ -552,12 +555,21 @@ public class ApiProcedures
         {
             var localPath = Path.Combine(installationDirectory,
                 SystemIoProcedures.NormalizePath(file.Directory));
-            await EnsureDirectoryExists(localPath);
-
+            
+            // Пропускаем скачивание опциональных модов
             if (IsOptionalMod(localPath))
             {
-                localPath = ToggleOptionalMod(localPath);
+#if DEBUG
+                Debug.WriteLine($"Skipping optional mod download: {file.Directory}");
+#endif
+                _finishedFilesCount++;
+                _progress = Convert.ToInt16(_finishedFilesCount * 100 / _progressFilesCount);
+                _progressChanged.OnNext(_progress);
+                _loadedFilesCount.OnNext(_finishedFilesCount);
+                return;
             }
+            
+            await EnsureDirectoryExists(localPath);
 
             var url = $"{_httpClient.BaseAddress.AbsoluteUri}api/v1/file/{file.Hash}";
 
