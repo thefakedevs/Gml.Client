@@ -555,20 +555,35 @@ public class ApiProcedures
         {
             var localPath = Path.Combine(installationDirectory,
                 SystemIoProcedures.NormalizePath(file.Directory));
-            
-            // Пропускаем скачивание опциональных модов
+
+            // Для опциональных модов: пропускаем если уже существуют (и не пустые), иначе скачиваем как .disabled
             if (IsOptionalMod(localPath))
             {
+                var disabledPath = $"{localPath}.disabled";
+
+                // Проверяем существование и размер файлов (пустые файлы считаем несуществующими)
+                var enabledExists = File.Exists(localPath) && new FileInfo(localPath).Length > 0;
+                var disabledExists = File.Exists(disabledPath) && new FileInfo(disabledPath).Length > 0;
+
+                if (enabledExists || disabledExists)
+                {
 #if DEBUG
-                Debug.WriteLine($"Skipping optional mod download: {file.Directory}");
+                    Debug.WriteLine($"Skipping optional mod download (already exists): {file.Directory}");
 #endif
-                _finishedFilesCount++;
-                _progress = Convert.ToInt16(_finishedFilesCount * 100 / _progressFilesCount);
-                _progressChanged.OnNext(_progress);
-                _loadedFilesCount.OnNext(_finishedFilesCount);
-                return;
+                    _finishedFilesCount++;
+                    _progress = Convert.ToInt16(_finishedFilesCount * 100 / _progressFilesCount);
+                    _progressChanged.OnNext(_progress);
+                    _loadedFilesCount.OnNext(_finishedFilesCount);
+                    return;
+                }
+
+                // Скачиваем опциональный мод как отключённый (.disabled)
+                localPath = disabledPath;
+#if DEBUG
+                Debug.WriteLine($"Optional mod not found locally, will download as disabled: {file.Directory}");
+#endif
             }
-            
+
             await EnsureDirectoryExists(localPath);
 
             var url = $"{_httpClient.BaseAddress.AbsoluteUri}api/v1/file/{file.Hash}";
