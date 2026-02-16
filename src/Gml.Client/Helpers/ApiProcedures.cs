@@ -784,6 +784,66 @@ public class ApiProcedures
         return result?.Data;
     }
 
+    public async Task<ILauncherUser?> RefreshUserProfile(string accessToken)
+    {
+#if DEBUG
+        Debug.WriteLine("Calling RefreshUserProfile");
+#endif
+        try
+        {
+            // Используем существующий метод Auth для получения актуальных данных
+            var model = JsonConvert.SerializeObject(new BaseUserPassword
+            {
+                AccessToken = accessToken
+            });
+
+            var data = new StringContent(model, Encoding.UTF8, "application/json");
+            var response = await _httpClient.PostAsync("/api/v1/integrations/auth/checkToken", data).ConfigureAwait(false);
+
+            if (!response.IsSuccessStatusCode)
+            {
+#if DEBUG
+                Debug.WriteLine("Failed to refresh user profile - auth check failed");
+#endif
+                return null;
+            }
+
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var dto = JsonConvert.DeserializeObject<ResponseMessage<PlayerReadDto>>(content);
+
+            if (dto?.Data == null)
+            {
+#if DEBUG
+                Debug.WriteLine("Failed to refresh user profile - no data in response");
+#endif
+                return null;
+            }
+
+            var authUser = new AuthLauncherUser
+            {
+                Uuid = dto.Data.Uuid,
+                Name = dto.Data.Name,
+                AccessToken = dto.Data.AccessToken,
+                Has2Fa = false,
+                ExpiredDate = dto.Data.ExpiredDate,
+                TextureUrl = dto.Data.TextureSkinUrl,
+                IsAuth = true
+            };
+
+#if DEBUG
+            Debug.WriteLine($"User profile refreshed successfully: {authUser.Name}");
+#endif
+            return authUser;
+        }
+        catch (Exception ex)
+        {
+#if DEBUG
+            Debug.WriteLine($"Error refreshing user profile: {ex.Message}");
+#endif
+            return null;
+        }
+    }
+
     public async Task<IVersionFile?> GetActualVersion(OsType osType, Architecture osArch)
     {
 #if DEBUG

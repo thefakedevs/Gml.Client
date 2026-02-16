@@ -46,6 +46,7 @@ public interface IGmlClientManager : IDisposable
     Task OpenServerConnection(ILauncherUser launcherUser);
     void ChangeInstallationFolder(string installationDirectory);
     Task<IPlayerTexture?> GetTexturesByName(string userName);
+    Task<ILauncherUser?> RefreshUserProfile(string accessToken);
     Task<ResponseMessage<List<ModReadDto>>> GetOptionalMods(string profileName, string accessToken);
     bool ToggleOptionalMod(string path, bool isEnebled);
 

@@ -301,6 +301,11 @@ public class GmlClientManager : IGmlClientManager
         return _apiProcedures.GetTexturesByName(userName);
     }
 
+    public Task<ILauncherUser?> RefreshUserProfile(string accessToken)
+    {
+        return _apiProcedures.RefreshUserProfile(accessToken);
+    }
+
     public async Task<(ILauncherUser User, string Message, IEnumerable<string> Details)> Auth(string accessToken)
     {
         var user = await _apiProcedures.Auth(accessToken);
